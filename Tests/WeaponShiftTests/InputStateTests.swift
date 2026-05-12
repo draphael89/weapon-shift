@@ -44,4 +44,14 @@ final class InputStateTests: XCTestCase {
         XCTAssertTrue(input.held(.restart))
         XCTAssertTrue(input.wasPressed(.restart))
     }
+
+    func testAnyPressMatchesTitleScreenAnyButtonContract() {
+        for action in InputAction.allCases {
+            var input = InputState()
+
+            input.setKeyboard(action, source: "key-\(action)", isDown: true)
+
+            XCTAssertTrue(input.hasAnyPress)
+        }
+    }
 }

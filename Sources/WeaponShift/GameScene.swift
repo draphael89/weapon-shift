@@ -92,7 +92,7 @@ enum Weapon: CaseIterable {
     }
 }
 
-enum InputAction: Hashable {
+enum InputAction: Hashable, CaseIterable {
     case left
     case right
     case up
@@ -188,6 +188,10 @@ struct InputState {
 
     func wasPressed(_ action: InputAction) -> Bool {
         pressed.contains(action)
+    }
+
+    var hasAnyPress: Bool {
+        !pressed.isEmpty
     }
 
     mutating func setKeyboard(_ action: InputAction, isDown: Bool) {
@@ -528,6 +532,15 @@ final class DungeonScene: SKScene {
         loadRoom(at: 0)
     }
 
+    func activateFromShellInput() {
+        switch screen {
+        case .title, .dead, .victory:
+            restartRun()
+        case .running:
+            break
+        }
+    }
+
     func prepareSnapshot(mode: String) {
         isPaused = false
         input = InputState()
@@ -610,7 +623,7 @@ final class DungeonScene: SKScene {
 
         switch screen {
         case .title:
-            if input.wasPressed(.attack) || input.wasPressed(.jump) || input.wasPressed(.restart) {
+            if input.hasAnyPress {
                 restartRun()
             }
             input.endFrame()

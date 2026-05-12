@@ -258,6 +258,10 @@ final class PixelViewportView: NSView {
         window?.titlebarAppearsTransparent = true
         window?.styleMask.insert(.fullSizeContentView)
         window?.makeFirstResponder(self)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.window?.makeFirstResponder(self)
+        }
     }
 
     override func layout() {
@@ -278,6 +282,11 @@ final class PixelViewportView: NSView {
 
     override func keyUp(with event: NSEvent) {
         scene.handleKey(event, isDown: false)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(self)
+        scene.activateFromShellInput()
     }
 
     override func flagsChanged(with event: NSEvent) {
