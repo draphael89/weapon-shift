@@ -218,7 +218,7 @@ struct PixelGameView: NSViewRepresentable {
 
 final class PixelViewportView: NSView {
     let scene: DungeonScene
-    private let skView = SKView()
+    private let skView = GameSKView()
     private let internalSize = CGSize(width: 480, height: 270)
     private let snapshotMode = appArgumentValue(after: "--snapshot")
     private let snapshotPath = appArgumentValue(after: "--snapshot-path")
@@ -230,6 +230,7 @@ final class PixelViewportView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.black.cgColor
 
+        skView.sceneInput = scene
         skView.presentScene(scene)
         skView.ignoresSiblingOrder = true
         skView.preferredFramesPerSecond = 60
@@ -257,10 +258,10 @@ final class PixelViewportView: NSView {
         window?.titleVisibility = .hidden
         window?.titlebarAppearsTransparent = true
         window?.styleMask.insert(.fullSizeContentView)
-        window?.makeFirstResponder(self)
+        window?.makeFirstResponder(skView)
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.window?.makeFirstResponder(self)
+            self.window?.makeFirstResponder(self.skView)
         }
     }
 
@@ -320,6 +321,29 @@ final class PixelViewportView: NSView {
             fputs("snapshot write failed: \(error)\n", stderr)
         }
         NSApp.terminate(nil)
+    }
+}
+
+final class GameSKView: SKView {
+    weak var sceneInput: DungeonScene?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        sceneInput?.handleKey(event, isDown: true)
+    }
+
+    override func keyUp(with event: NSEvent) {
+        sceneInput?.handleKey(event, isDown: false)
+    }
+
+    override func flagsChanged(with event: NSEvent) {
+        sceneInput?.handleFlags(event.modifierFlags)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(self)
+        sceneInput?.activateFromShellInput()
     }
 }
 
